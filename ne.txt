@@ -1,0 +1,495 @@
+-- Function 1: Load DrRay Library (Not really a function, but initialization)
+local DrRayLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/AZYsGithub/DrRay-UI-Library/main/DrRay.lua"))()
+
+-- Function 2: Load the main window
+local window = DrRayLibrary:Load("GUI", "Default")
+
+-- Function 3: Create the tab
+local tab1 = DrRayLibrary.newTab("Infectious smile", "rbxassetid://1129583422")
+tab1.newLabel("Human")
+
+-- Function 4: Fast Weapon Dropdown and equipTool function
+-- This contains multiple smaller, repeated functions *within* the dropdown's callback.
+tab1.newDropdown("Fast weapon", "Makes your equipment faster", {"Bat", "Bottle", "Katana", "Branch", "Spare", "Chain"}, function(selectedOption)
+    local function equipTool(targetToolName)  -- This is the inner function, now defined *once*.
+        local player = game.Players.LocalPlayer
+        local backpack = player.Backpack
+        local character = player.Character
+
+        local targetTool = backpack:FindFirstChild(targetToolName)
+        if targetTool then
+            targetTool.Parent = character
+        end
+    end
+
+    if selectedOption == "Bat" then
+        equipTool("Bat")
+        wait(0.1)
+        game.Players.LocalPlayer.Character.Bat.Cooldown.Value = 0
+    elseif selectedOption == "Bottle" then  -- Use elseif for efficiency.
+        equipTool("Bottle")
+        wait(0.1)
+        game.Players.LocalPlayer.Character.Bottle.Cooldown.Value = 0
+    elseif selectedOption == "Katana" then
+        equipTool("Katana")
+        wait(0.1)
+        game.Players.LocalPlayer.Character.Katana.Cooldown.Value = 0
+     elseif selectedOption == "Branch" then
+        equipTool("Branch")
+        wait(0.1)
+        game.Players.LocalPlayer.Character.Branch.Cooldown.Value = 0
+    elseif selectedOption == "Spare" then
+        equipTool("Spare")
+        wait(0.1)
+        game.Players.LocalPlayer.Character.Spare.Cooldown.Value = 0
+    elseif selectedOption == "Chain" then
+        equipTool("Chain")
+        wait(0.1)
+        game.Players.LocalPlayer.Character.Chain.Cooldown.Value = 0
+    end
+end)
+
+-- Function 5: Remove Killbricks Toggle
+tab1.newToggle("Remove killbricks", "Removes all blocks that instantly kill you", true, function(toggleState)
+    local player = game:GetService("Players").LocalPlayer
+    while task.wait() do
+        local parts = workspace:GetPartBoundsInRadius(player.Character:WaitForChild("HumanoidRootPart").Position, 10)
+        for _, part in ipairs(parts) do
+            part.CanTouch = toggleState -- Simplified logic
+        end
+    end
+end)
+
+-- Function 6: Input Reach Input and equipTool function (Refactored)
+tab1.newInput("Input reach", "Reset to turn it off", function(text)
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+
+    local function equipTool(toolName)  -- Re-use the equipTool function concept
+        local tool = player.Backpack:FindFirstChild(toolName)
+        if tool then
+            tool.Parent = character
+            wait()  -- Wait a frame before re-parenting
+            tool.Parent = player.Character
+        end
+    end
+
+    equipTool("Bottle")
+    equipTool("Branch")
+
+    for i, v in pairs(character:GetChildren()) do
+        if v:IsA("Tool") then
+            local a = Instance.new("SelectionBox", v.Handle)
+            v.Handle.Massless = true
+            v.Handle.Transparency = 1
+            a.Adornee = v.Handle
+            v.Handle.Size = Vector3.new(tonumber(text) or 1, tonumber(text) or 1, tonumber(text) or 1)  -- Handle non-numeric input, default to size 1
+            local selectionBox = Instance.new("SelectionBox", v.Handle)
+            selectionBox.Adornee = v.Handle
+            selectionBox.Color3 = Color3.new(0, 0.313725, 0.47451)
+        end
+    end
+end)
+
+-- Function 7: Weapon Giver Toggle
+tab1.newToggle("Weapon giver", "Press this button to turn it on (works remotely)", true, function(toggleState)
+    game:GetService("CoreGui").PurchasePrompt.Enabled = false -- Disable PurchasePrompt either way.
+    _G.Lag = toggleState  --  Use the toggleState directly
+
+    while _G.Lag do
+        for i, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("ClickDetector") then
+                pcall(fireclickdetector, v) -- Use pcall for error handling
+            end
+        end
+        wait(1)
+    end
+end)
+
+-- Function 8: Get Weapons Button
+tab1.newButton("Get weapons", "Gives weapons", function()
+    local last_pick_sin_mrazy = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
+
+    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-18, 6, -14)
+    task.wait()
+    game:GetService("CoreGui").PurchasePrompt.Enabled = false
+    for i, v in pairs(workspace:GetDescendants()) do
+        if v:IsA("ClickDetector") then
+            pcall(fireclickdetector, v)  -- Use pcall
+        end
+    end
+    task.wait()
+    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = last_pick_sin_mrazy
+end)
+
+-- Function 9: Delete Tool Button
+tab1.newButton("Delete tool", "Removes tool in hand", function()
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    local tool = character:FindFirstChildOfClass("Tool")
+    if tool then
+        tool:Destroy()
+    end
+end)
+
+-- Function 10: Anti Inventory Block Toggle
+tab1.newToggle("Anti inventory block", "Well, now you understand", true, function(toggleState)
+    local StarterGui = game:GetService("StarterGui") -- Get StarterGui *inside* the function
+    while toggleState do  -- Use toggleState directly, no need for a separate variable.
+        task.wait()
+        StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, true)
+    end
+end)
+
+-- Function 11: Anti Infection Button
+tab1.newButton("Anti infection", "You won't be able to get infected except the players", function()
+    for _, v in pairs(game.workspace:GetDescendants()) do
+        if string.find(v.Name, "Infector") then
+            v:Destroy()
+        end
+    end
+end)
+
+-- Function 12: Anti Infected Players Toggle (Fling)
+tab1.newToggle("Anti infected players", "Fling players", true, function(toggleState)
+	local hiddenfling = toggleState -- Use toggleState directly
+
+    if toggleState then
+        if not game:GetService("ReplicatedStorage"):FindFirstChild("juisdfj0i32i0eidsuf0iok") then
+            local detection = Instance.new("Decal")
+            detection.Name = "juisdfj0i32i0eidsuf0iok"
+            detection.Parent = game:GetService("ReplicatedStorage")
+
+            local function fling()  -- Keep the fling function definition *inside* the toggle.
+                local hrp, c, vel, movel = nil, nil, nil, 0.1
+                while true do
+                    game:GetService("RunService").Heartbeat:Wait()
+                    if hiddenfling then
+                        local lp = game.Players.LocalPlayer
+                        while hiddenfling and not (c and c.Parent and hrp and hrp.Parent) do
+                            game:GetService("RunService").Heartbeat:Wait()
+                            c = lp.Character
+                            hrp = c:FindFirstChild("HumanoidRootPart") or c:FindFirstChild("Torso") or c:FindFirstChild("UpperTorso")
+                        end
+                        if hiddenfling and c and c.Parent and hrp and hrp.Parent then -- Combine conditions
+                            vel = hrp.Velocity
+                            hrp.Velocity = vel * 100000 + Vector3.new(0, 100000, 0)
+                            game:GetService("RunService").RenderStepped:Wait()
+                            hrp.Velocity = vel
+                            game:GetService("RunService").Stepped:Wait()
+                            hrp.Velocity = vel + Vector3.new(0, movel, 0)
+                            movel = movel * -1
+                        end
+                    end
+                end
+            end
+
+            fling()  -- Call fling() to start the loop.
+        end
+    else
+        hiddenfling = false -- Ensure it's set to false.
+    end
+end)
+-- Function 13: AntiCheat Destroy Button
+tab1.newButton("AntiCheat destroy", "Removes killbricks outside the server boundary", function()
+    if workspace and workspace.Map and workspace.Map.AntiHack then
+	    workspace.Map.AntiHack:Destroy()
+    end
+    local LocalPlayer = game:GetService("Players").LocalPlayer
+    if LocalPlayer and LocalPlayer.Character and LocalPlayer.Character.AntiFly then
+        LocalPlayer.Character.AntiFly:Destroy()
+    end
+end)
+
+-- Function 14: Infect Button
+tab1.newLabel("Smile")
+
+tab1.newButton("Infect", "Infects you", function()
+    local Map = workspace and workspace.Map
+    if Map and Map.Infectors and Map.Infectors.Infector and Map.Infectors.Infector.Part then
+        local LocalPlayer = game:GetService("Players").LocalPlayer
+        if LocalPlayer and LocalPlayer.Character and LocalPlayer.Character.HumanoidRootPart then
+            Map.Infectors.Infector.Part.Position = LocalPlayer.Character.HumanoidRootPart.Position
+            Map.Infectors.Infector.Part.CanCollide = false
+            if LocalPlayer.Character.Infected and LocalPlayer.Character.Infected.InfectedSpeed then
+                LocalPlayer.Character.Infected.InfectedSpeed.Value = 0
+			end
+        end
+    end
+end)
+
+--Function 15: Anti Yellow Doors
+tab1.newButton("Anti Yellow doors", "Removes yellow doors", function()
+    for _,v in pairs(game.workspace:GetDescendants()) do
+        if string.find(v.Name,"AntiSmiler") then
+            v:Destroy()
+        end
+    end
+end)
+
+--Function 16: Auto Infection
+tab1.newToggle("Auto infection", "Well, now you understand", true, function(toggleState)
+    while toggleState do
+        wait()
+        local LocalPlayer = game:GetService("Players").LocalPlayer
+        if LocalPlayer and LocalPlayer.Character and LocalPlayer.Character.Infected then
+            LocalPlayer.Character.Infected.InfectEvent:FireServer()
+        end
+    end
+end)
+
+-- Function 17:  Grab Player Input
+tab1.newInput("Grab player", "There may be disturbances", function(text)
+    local last_pick_sin_mrazy = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
+
+    local function findPlayer(name)
+        for _, player in ipairs(game.Players:GetPlayers()) do
+            if player.Name:lower():find(name:lower()) or player.DisplayName:lower():find(name:lower()) then -- Use :find, it's more efficient and handles partial matches better.
+                return player
+            end
+        end
+        return nil
+    end
+
+    local function teleportToPlayer(targetPlayer)
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+        local targetCharacter = targetPlayer.Character or targetPlayer.CharacterAdded:Wait()
+        local targetHumanoidRootPart = targetCharacter:WaitForChild("HumanoidRootPart")
+
+        humanoidRootPart.CFrame = targetHumanoidRootPart.CFrame
+    end
+
+    local targetPlayer = findPlayer(text)  -- Use the entered text directly
+
+    if targetPlayer then
+        -- This anti-fling code is complex and likely specific to this game.  It's included here, but might need adjustments.
+        local Services = setmetatable({}, {
+            __index = function(Self, Index)
+                local NewService = game:GetService(Index) -- Use game:GetService directly
+                if NewService then
+                    Self[Index] = NewService
+                end
+                return NewService
+            end
+        })
+
+        local LocalPlayer = Services.Players.LocalPlayer
+
+        local function PlayerAdded(Player)
+            local Detected = false
+            local Character
+            local PrimaryPart
+
+            local function CharacterAdded(NewCharacter)
+                Character = NewCharacter
+                repeat
+                    wait()
+                    PrimaryPart = NewCharacter:FindFirstChild("HumanoidRootPart")
+                until PrimaryPart
+                Detected = false
+            end
+
+            CharacterAdded(Player.Character or Player.CharacterAdded:Wait())
+            Player.CharacterAdded:Connect(CharacterAdded)
+            Services.RunService.Heartbeat:Connect(function()
+                if (Character and Character:IsDescendantOf(workspace)) and (PrimaryPart and PrimaryPart:IsDescendantOf(Character)) then
+                    if PrimaryPart.AssemblyAngularVelocity.Magnitude > 0 or PrimaryPart.AssemblyLinearVelocity.Magnitude > 0 then
+                        if not Detected then  -- Use not Detected for clarity.
+                            -- Detected logic (likely anti-cheat, specific to the game)
+                        end
+                        Detected = true
+                        for i, v in ipairs(Character:GetDescendants()) do
+                            if v:IsA("BasePart") then
+                                v.CanCollide = false
+                                v.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                                v.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                                v.CustomPhysicalProperties = PhysicalProperties.new(0, 0, 0)
+                            end
+                        end
+                        PrimaryPart.CanCollide = false
+                        PrimaryPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                        PrimaryPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                        PrimaryPart.CustomPhysicalProperties = PhysicalProperties.new(0, 0, 0)
+                    end
+                end
+            end)
+        end
+
+        for i, v in ipairs(Services.Players:GetPlayers()) do
+            if v ~= LocalPlayer then
+                PlayerAdded(v)
+            end
+        end
+        Services.Players.PlayerAdded:Connect(PlayerAdded)
+
+        for i = 1, 50 do
+            task.wait()
+            teleportToPlayer(targetPlayer)
+            local LocalPlayer = game:GetService("Players").LocalPlayer
+            if LocalPlayer and LocalPlayer.Character and LocalPlayer.Character.Infected then
+                LocalPlayer.Character.Infected.InfectEvent:FireServer()
+            end
+        end
+        wait()
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = last_pick_sin_mrazy
+    else
+        warn("I don't see a player with that name")  -- Use warn() for better visibility in the output.
+    end
+end)
+
+-- Function 18: Auto Collecting Coins Toggle
+tab1.newToggle("Auto collecting coins", "Collects everything SmileCoins", true, function(toggleState)
+    local jjj = toggleState
+    while jjj do
+        wait(0.1)
+        local plr = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character.Head --Check if Head exist
+        if plr then
+           for i, v in pairs(game:GetService("Workspace"):GetDescendants()) do
+                if v.Name == "SmileCoin" and v:FindFirstChild("TouchInterest") then
+                    firetouchinterest(plr, v, 0)
+                    firetouchinterest(plr, v, 1) -- often needed
+                end
+            end 
+        end        
+    end
+end)
+
+-- Function 19: Fullbright Button
+tab1.newLabel("Events")
+tab1.newButton("Fullbright", "You will see in the dark", function()
+    pcall(function()
+        local lighting = game:GetService("Lighting")
+        lighting.Ambient = Color3.fromRGB(255, 255, 255)
+        lighting.Brightness = 1
+        lighting.FogEnd = 1e10
+        for i, v in pairs(lighting:GetDescendants()) do
+            if v:IsA("BloomEffect") or v:IsA("BlurEffect") or v:IsA("ColorCorrectionEffect") or v:IsA("SunRaysEffect") then
+                v.Enabled = false
+            end
+        end
+        lighting.Changed:Connect(function()
+            lighting.Ambient = Color3.fromRGB(255, 255, 255)
+            lighting.Brightness = 1
+            lighting.FogEnd = 1e10
+        end)
+        spawn(function()
+            local character = game:GetService("Players").LocalPlayer.Character
+            while true do
+                if character and not character.HumanoidRootPart:FindFirstChildWhichIsA("PointLight") then
+                    local headlight = Instance.new("PointLight", character.HumanoidRootPart)
+                    headlight.Brightness = 1
+                    headlight.Range = 60
+                end
+                wait()
+            end
+        end)
+    end)
+end)
+
+-- Function 20: No Fog Button
+tab1.newButton("No fog", "Helps against the rich", function()
+    local Lighting = game:GetService("Lighting")
+    if Lighting then
+        Lighting.FogStart = math.huge
+        Lighting.FogEnd = math.huge
+        Lighting.FogColor = Color3.new(0, 0, 0)
+    end
+end)
+
+-- Function 21: Check Seismic Activity Button
+tab1.newButton("Check Seismic Activity", "Checks how much time is left before disaster", function()
+    local player = game.Players.LocalPlayer
+    local camera = workspace.CurrentCamera
+    local targetPosition = CFrame.new(-22, 6, -10)
+
+    local originalPosition = camera.CFrame
+    camera.CameraType = Enum.CameraType.Scriptable
+    camera.CFrame = targetPosition
+
+    wait(4)
+    camera.CameraType = Enum.CameraType.Custom
+    camera.CFrame = originalPosition
+end)
+
+-- Function 22: Anti Black Hole Button
+tab1.newButton("Anti black hole", "You don't get distracted by explosions", function()
+    local plr = game.Players.LocalPlayer
+    local char = plr.Character
+    if char then
+        for _, child in pairs(char:GetChildren()) do
+            if child:IsA("BasePart") then
+                child.Massless = false
+                child.CustomPhysicalProperties = PhysicalProperties.new(math.huge, math.huge, math.huge)
+            end
+        end
+    end
+end)
+
+-- Function 23: Kill All NPCs Button
+tab1.newButton("Kill all NPCs", "Kills NPC entities (if you damage them, their HP will be restored)", function()
+    pcall(sethiddenproperty, game.Players.LocalPlayer, "SimulationRadius", 112412400000)
+    pcall(sethiddenproperty, game.Players.LocalPlayer, "MaxSimulationRadius", 112412400000) --Use pcall
+    for i, d in pairs(game.Workspace:GetDescendants()) do
+        if d.ClassName == 'Humanoid' and not game.Players:FindFirstChild(d.Parent.Name) then
+            d.Health = 0
+        end
+    end
+end)
+-- Function 24: external script
+tab1.newLabel("GUIS")
+
+tab1.newButton("Smile Hax", "Tap here", function()
+    local suc, res = pcall(function()
+       return loadstring(game:HttpGet("https://pastebin.com/raw/WG1BMS72",true))()
+    end)
+    if not suc then
+        warn("Smile Hax failed:", res) -- error reporting
+    end
+end)
+-- Function 25: external script
+tab1.newButton("Multi hub", "Tap here", function()
+    local suc, res = pcall(function()
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/jj123llol/multi-hub/main/Multi",true))()
+    end)
+    if not suc then
+        warn("Multi hub failed:", res) -- error reporting
+    end
+end)
+-- Function 26: external script
+tab1.newButton("ROChips", "Tap here", function()
+    local suc, res = pcall(function()
+    return loadstring(game:HttpGet(('https://pastebin.com/raw/5NvnvrrS'),true))()
+     end)
+    if not suc then
+        warn("ROChips failed:", res) -- error reporting
+    end
+end)
+-- Function 27: external script
+tab1.newButton("GUI", "Tap here", function()
+    local suc, res = pcall(function()
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/MariyaFurmanova/Library/main/InfectiousSmile", true))()
+     end)
+    if not suc then
+        warn("GUI failed:", res) -- error reporting
+    end
+end)
+-- Function 28: external script
+tab1.newButton("GUI", "Tap here", function()
+    local suc, res = pcall(function()
+        return loadstring(game:HttpGet("https://pastebin.com/raw/X8hLEwcz"))()
+    end)
+     if not suc then
+        warn("GUI failed:", res) -- error reporting
+    end
+end)
+-- Function 29: external script
+tab1.newButton("GUI", "Tap here", function()
+   local suc, res = pcall(function()
+        return loadstring(game:HttpGet("https://raw.githubusercontent.com/Nicuse/RobloxScripts/main/InfectiousSmile.lua", true))()
+    end)
+    if not suc then
+        warn("GUI failed:", res) -- error reporting
+    end
+end)
