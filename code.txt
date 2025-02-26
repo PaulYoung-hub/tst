@@ -1,444 +1,8 @@
--- Simple UI Library (Violet/Blue Theme)
+local DrRayLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/AZYsGithub/DrRay-UI-Library/main/DrRay.lua"))()
 
-local SimpleUI = {}
+local window = DrRayLibrary:Load("GUI", "Default")
 
-local colors = {
-    background = Color3.fromRGB(40, 30, 50),  -- Dark Purple
-    panel = Color3.fromRGB(60, 45, 75),     -- Slightly Lighter Purple
-    button = Color3.fromRGB(80, 60, 100),    -- Lighter Purple
-    buttonHover = Color3.fromRGB(100, 80, 120), -- Even Lighter Purple
-    text = Color3.fromRGB(200, 200, 255),   -- Light Bluish White
-    accent = Color3.fromRGB(100, 100, 255),  -- Light Blue
-    toggleOn = Color3.fromRGB(120, 100, 255), -- Light Blue
-    toggleOff = Color3.fromRGB(70, 50, 80),   -- Darker Purple
-    dropdownBackground = Color3.fromRGB(50, 40, 65), -- Dark Purple for Dropdown
-    dropdownOption = Color3.fromRGB(70, 55, 85),   -- Slightly Lighter for Options
-    inputBackground = Color3.fromRGB(50, 40, 65),
-}
-
-local function createFrame(parent, props)
-    local frame = Instance.new("Frame")
-    frame.Parent = parent
-    for k, v in pairs(props) do
-        frame[k] = v
-    end
-    return frame
-end
-
-local function createTextLabel(parent, props)
-    local label = Instance.new("TextLabel")
-    label.Parent = parent
-    for k, v in pairs(props) do
-        label[k] = v
-    end
-    return label
-end
-
-local function createTextButton(parent, props, callback)
-    local button = Instance.new("TextButton")
-    button.Parent = parent
-    for k, v in pairs(props) do
-        button[k] = v
-    end
-    if callback then
-        button.MouseButton1Click:Connect(callback)
-    end
-      -- Hover effect (using MouseEnter and MouseLeave)
-    button.MouseEnter:Connect(function()
-        button.BackgroundColor3 = colors.buttonHover
-    end)
-    button.MouseLeave:Connect(function()
-        button.BackgroundColor3 = colors.button
-    end)
-    return button
-end
-
-local function createImageLabel(parent, props)
-  local imageLabel = Instance.new("ImageLabel")
-  imageLabel.Parent = parent
-  for k, v in pairs(props) do
-    imageLabel[k] = v
-  end
-  return imageLabel
-end
-
-
-
-function SimpleUI:Load(title)
-    local gui = Instance.new("ScreenGui")
-    gui.Name = "SimpleUIGui"
-    gui.ResetOnSpawn = false
-    gui.Parent = game:GetService("CoreGui") -- Or game.Players.LocalPlayer.PlayerGui
-
-    local mainFrame = createFrame(gui, {
-        Name = "MainFrame",
-        Size = UDim2.new(0.5, 0, 0.8, 0),  -- Adjust size as needed
-        Position = UDim2.new(0.25, 0, 0.1, 0), -- Center on screen
-        BackgroundColor3 = colors.background,
-        BorderSizePixel = 0,
-        Active = true,
-        Draggable = true,
-    })
-     -- Title Bar
-    local titleBar = createFrame(mainFrame, {
-        Name = "TitleBar",
-        Size = UDim2.new(1, 0, 0, 30),
-        Position = UDim2.new(0, 0, 0, 0),
-        BackgroundColor3 = colors.panel,
-        BorderSizePixel = 0,
-    })
-
-    local titleLabel = createTextLabel(titleBar, {
-        Name = "TitleLabel",
-        Size = UDim2.new(1, 0, 1, 0),
-        Position = UDim2.new(0, 0, 0, 0),
-        BackgroundColor3 = Color3.new(1, 1, 1),
-        BackgroundTransparency = 1,
-        BorderSizePixel = 0,
-        Font = Enum.Font.SourceSansBold,
-        Text = title or "GUI",
-        TextColor3 = colors.text,
-        TextSize = 18,
-        TextXAlignment = Enum.TextXAlignment.Left,
-    })
-
-        -- Close Button (small 'X')
-    local closeButton = createTextButton(titleBar, {
-        Name = "CloseButton",
-        Size = UDim2.new(0, 20, 0, 20),
-        Position = UDim2.new(1, -25, 0, 5),  -- Position in top-right
-        BackgroundColor3 = colors.button,
-        BorderSizePixel = 0,
-        Font = Enum.Font.SourceSansBold,
-        Text = "X",
-        TextColor3 = colors.text,
-        TextSize = 14,
-      },
-      function()
-          gui:Destroy()
-      end
-      )
-
-
-    local tabsFrame = createFrame(mainFrame, {
-        Name = "TabsFrame",
-        Size = UDim2.new(0.2, 0, 0.9, 0),
-        Position = UDim2.new(0, 0, 0, 30),
-        BackgroundColor3 = colors.panel,
-        BorderSizePixel = 0,
-    })
-
-    local contentFrame = createFrame(mainFrame, {
-        Name = "ContentFrame",
-        Size = UDim2.new(0.8, 0, 0.9, 0),
-        Position = UDim2.new(0.2, 0, 0, 30),
-        BackgroundColor3 = colors.panel,
-        BorderSizePixel = 0,
-        ClipsDescendants = true, -- Important for scrolling
-    })
-
-    local tabs = {}
-    local currentTab = nil
-
-    local function createTab(name, icon)
-        local tabButton = createTextButton(tabsFrame, {
-            Name = name .. "Button",
-            Size = UDim2.new(1, 0, 0, 30),
-            Position = UDim2.new(0, 0, 0, (#tabs * 30)),  -- Stack vertically
-            BackgroundColor3 = colors.button,
-            BorderSizePixel = 0,
-            Font = Enum.Font.SourceSans,
-            Text = name,
-            TextColor3 = colors.text,
-            TextSize = 14,
-        }, function()
-            if currentTab then
-                currentTab.frame.Visible = false
-            end
-            currentTab = tabs[name]
-            currentTab.frame.Visible = true
-        end)
-
-        local tabFrame = createFrame(contentFrame, {
-            Name = name .. "Frame",
-            Size = UDim2.new(1, 0, 1, 0),
-            Position = UDim2.new(0, 0, 0, 0),
-            BackgroundColor3 = colors.panel,
-            BorderSizePixel = 0,
-            Visible = false, -- Initially hidden
-        })
-        -- ScrollingFrame inside tabFrame
-        local scrollingFrame = Instance.new("ScrollingFrame")
-        scrollingFrame.Parent = tabFrame
-        scrollingFrame.Size = UDim2.new(1, 0, 1, 0)  -- Fill the tabFrame
-        scrollingFrame.Position = UDim2.new(0, 0, 0, 0)
-        scrollingFrame.BackgroundColor3 = colors.panel
-        scrollingFrame.BorderSizePixel = 0
-        scrollingFrame.ScrollBarThickness = 8 -- Make the scrollbar visible
-        scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0) -- Initially zero
-        scrollingFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y -- Auto adjust height
-        scrollingFrame.ScrollingDirection = Enum.ScrollingDirection.Y
-        scrollingFrame.ScrollBarImageColor3 = colors.accent
-
-      -- Add image if there's an icon
-      if icon then
-        local image = createImageLabel(tabButton, {
-            Name = "TabIcon",
-            Size = UDim2.new(0, 20, 0, 20),  -- Adjust the size of the icon
-            Position = UDim2.new(0, 5, 0, 5),  -- Position the icon
-            BackgroundTransparency = 1,
-            Image = icon,
-        })
-          -- Adjust text position to accomodate the icon
-          tabButton.TextXAlignment = Enum.TextXAlignment.Right
-          tabButton.Text = "   " .. name
-      end
-
-        tabs[name] = {button = tabButton, frame = tabFrame, scrollingFrame = scrollingFrame, nextY = 10}
-
-        return tabs[name]
-    end
-
-    local function newLabel(tab, text)
-        local label = createTextLabel(tab.scrollingFrame, {
-            Name = "Label_" .. text,
-            Size = UDim2.new(0.9, 0, 0, 25),
-            Position = UDim2.new(0.05, 0, 0, tab.nextY),
-            BackgroundColor3 = Color3.new(1, 1, 1),
-            BackgroundTransparency = 1,
-            BorderSizePixel = 0,
-            Font = Enum.Font.SourceSansBold,
-            Text = text,
-            TextColor3 = colors.text,
-            TextSize = 16,
-            TextXAlignment = Enum.TextXAlignment.Left,
-
-        })
-        tab.nextY = tab.nextY + 35
-        return label
-    end
-
-    local function newButton(tab, text, callback)
-      local button = createTextButton(tab.scrollingFrame, {
-          Name = "Button_" .. text,
-          Size = UDim2.new(0.9, 0, 0, 30),
-          Position = UDim2.new(0.05, 0, 0, tab.nextY),
-          BackgroundColor3 = colors.button,
-          BorderSizePixel = 0,
-          Font = Enum.Font.SourceSans,
-          Text = text,
-          TextColor3 = colors.text,
-          TextSize = 14,
-      }, callback)
-      tab.nextY = tab.nextY + 40
-      return button
-    end
-
-    local function newToggle(tab, text, defaultState, callback)
-        local toggleFrame = createFrame(tab.scrollingFrame, {
-            Name = "ToggleFrame_" .. text,
-            Size = UDim2.new(0.9, 0, 0, 30),
-            Position = UDim2.new(0.05, 0, 0, tab.nextY),
-            BackgroundColor3 = Color3.new(1,1,1),
-            BackgroundTransparency = 1,
-            BorderSizePixel = 0,
-        })
-
-        local toggleButton = createFrame(toggleFrame, {
-            Name = "ToggleButton",
-            Size = UDim2.new(0, 20, 0, 20),
-            Position = UDim2.new(0, 0, 0, 5),
-            BackgroundColor3 = defaultState and colors.toggleOn or colors.toggleOff, -- Initial state
-            BorderSizePixel = 0,
-        })
-        local toggleState = defaultState
-        local toggleLabel = createTextLabel(toggleFrame, {
-            Name = "ToggleLabel",
-            Size = UDim2.new(0.8, 0, 1, 0),
-            Position = UDim2.new(0.15, 0, 0, 0),
-            BackgroundColor3 = Color3.new(1,1,1),
-            BackgroundTransparency = 1,
-            BorderSizePixel = 0,
-            Font = Enum.Font.SourceSans,
-            Text = text,
-            TextColor3 = colors.text,
-            TextSize = 14,
-            TextXAlignment = Enum.TextXAlignment.Left,
-        })
-         --Click event
-        toggleButton.MouseButton1Click:Connect(function()
-            toggleState = not toggleState
-            toggleButton.BackgroundColor3 = toggleState and colors.toggleOn or colors.toggleOff
-            if callback then
-                callback(toggleState)
-            end
-        end)
-
-        tab.nextY = tab.nextY + 40
-        return toggleFrame
-    end
-
-    local function newDropdown(tab, text, options, callback)
-    local dropdownFrame = createFrame(tab.scrollingFrame, {
-        Name = "DropdownFrame_" .. text,
-        Size = UDim2.new(0.9, 0, 0, 30),
-        Position = UDim2.new(0.05, 0, 0, tab.nextY),
-        BackgroundColor3 = colors.dropdownBackground,
-        BorderSizePixel = 0,
-    })
-
-    local dropdownLabel = createTextLabel(dropdownFrame, {
-        Name = "DropdownLabel",
-        Size = UDim2.new(0.8, 0, 1, 0),
-        Position = UDim2.new(0, 0, 0, 0),
-        BackgroundColor3 = colors.dropdownBackground,
-        BorderSizePixel = 0,
-        Font = Enum.Font.SourceSans,
-        Text = text .. ": " .. (options[1] or ""), -- Show first option initially
-        TextColor3 = colors.text,
-        TextSize = 14,
-        TextXAlignment = Enum.TextXAlignment.Left,
-
-    })
-
-    local dropdownButton = createTextButton(dropdownFrame, { -- Use TextButton, not Frame
-        Name = "DropdownButton",
-        Size = UDim2.new(0, 20, 0, 20),
-        Position = UDim2.new(1, -25, 0, 5),
-        BackgroundColor3 = colors.button,
-        BorderSizePixel = 0,
-        Font = Enum.Font.SourceSans,
-        Text = "V",  -- Downward arrow
-        TextColor3 = colors.text,
-        TextSize = 14,
-    })
-
-    local optionsFrame = createFrame(dropdownFrame, {
-        Name = "OptionsFrame",
-        Size = UDim2.new(1, 0, 0, 0), -- Initially zero height
-        Position = UDim2.new(0, 0, 1, 0),
-        BackgroundColor3 = colors.dropdownBackground,
-        BorderSizePixel = 0,
-        Visible = false, -- Hidden by default
-        ClipsDescendants = true,
-    })
-
-    local function closeDropdown()
-        optionsFrame.Visible = false
-        optionsFrame.Size = UDim2.new(1, 0, 0, 0) -- Reset height
-    end
-
-
-    local function createOptionButton(optionText, index)
-        local optionButton = createTextButton(optionsFrame, {
-            Name = "Option_" .. optionText,
-            Size = UDim2.new(1, 0, 0, 25),
-            Position = UDim2.new(0, 0, 0, (index - 1) * 25),
-            BackgroundColor3 = colors.dropdownOption,
-            BorderSizePixel = 0,
-            Font = Enum.Font.SourceSans,
-            Text = optionText,
-            TextColor3 = colors.text,
-            TextSize = 14,
-            TextXAlignment = Enum.TextXAlignment.Left,
-        }, function()
-            dropdownLabel.Text = text .. ": " .. optionText
-            closeDropdown()
-            if callback then
-                callback(optionText)
-            end
-        end)
-
-       -- Remove hover effect for dropdown options
-        optionButton.MouseEnter:Disconnect(optionButton.MouseEnter)
-        optionButton.MouseLeave:Disconnect(optionButton.MouseLeave)
-
-    end
-    -- Create option buttons
-    for i, option in ipairs(options) do
-        createOptionButton(option, i)
-    end
-
-    -- Dropdown button click - toggle options visibility
-    dropdownButton.MouseButton1Click:Connect(function()
-        if optionsFrame.Visible then
-            closeDropdown()
-        else
-            optionsFrame.Visible = true
-            optionsFrame.Size = UDim2.new(1, 0, 0, #options * 25) -- Set height based on options
-        end
-    end)
-
-    -- Click outside to close (using the main frame)
-    mainFrame.MouseButton1Click:Connect(function(x,y)
-        -- Check if the click is outside the dropdown
-        local dropdownAbsolutePos = dropdownFrame.AbsolutePosition
-        local dropdownAbsoluteSize = dropdownFrame.AbsoluteSize
-
-        if not (x >= dropdownAbsolutePos.X and x <= dropdownAbsolutePos.X + dropdownAbsoluteSize.X and
-                y >= dropdownAbsolutePos.Y and y <= dropdownAbsolutePos.Y + dropdownAbsoluteSize.Y) then
-             closeDropdown()
-        end
-
-    end)
-    tab.nextY = tab.nextY + 40 -- Add space for the dropdown
-
-    return dropdownFrame
-end
-
-  local function newInput(tab, text, callback)
-      local inputFrame = createFrame(tab.scrollingFrame, {
-          Name = "InputFrame_" .. text,
-          Size = UDim2.new(0.9, 0, 0, 30),
-          Position = UDim2.new(0.05, 0, 0, tab.nextY),
-          BackgroundColor3 = colors.inputBackground,
-          BorderSizePixel = 0,
-      })
-
-      local inputLabel = createTextLabel(inputFrame, {
-          Name = "InputLabel",
-          Size = UDim2.new(0.4, 0, 1, 0),
-          Position = UDim2.new(0, 0, 0, 0),
-          BackgroundColor3 = colors.inputBackground,
-          BorderSizePixel = 0,
-          Font = Enum.Font.SourceSans,
-          Text = text .. ":",
-          TextColor3 = colors.text,
-          TextSize = 14,
-          TextXAlignment = Enum.TextXAlignment.Left
-      })
-
-      local textBox = Instance.new("TextBox")
-      textBox.Parent = inputFrame
-      textBox.Size = UDim2.new(0.5, 0, 1, 0)
-      textBox.Position = UDim2.new(0.4, 0, 0, 0)
-      textBox.BackgroundColor3 = colors.inputBackground
-      textBox.BorderSizePixel = 0
-      textBox.Font = Enum.Font.SourceSans
-      textBox.Text = ""
-      textBox.TextColor3 = colors.text
-      textBox.TextSize = 14
-      textBox.ClearTextOnFocus = false
-
-      textBox.FocusLost:Connect(function(enterPressed)
-            if enterPressed and callback then
-                callback(textBox.Text)
-            end
-      end)
-      tab.nextY = tab.nextY + 40
-      return inputFrame
-
-  end
-
-    return {newTab = createTab, newLabel = newLabel, newButton = newButton, newToggle = newToggle, newDropdown = newDropdown, newInput = newInput}
-end
-
-
--- Usage (replace your existing UI code with this):
-
-local SimpleUI = SimpleUI:Load("Infectious Smile GUI")
-
-local tab1 = SimpleUI.newTab("Infectious smile", "rbxassetid://1129583422") -- Keep the icon
+local tab1 = DrRayLibrary.newTab("Infectious smile", "rbxassetid://1129583422")
 
 tab1.newLabel("Human")
 
@@ -629,7 +193,7 @@ end
   end
     else
         game:GetService("CoreGui").PurchasePrompt.Enabled = false
-_G.Lag = true
+_G.Lag = true 
 while _G.Lag do
 for i,v in pairs(workspace:GetDescendants()) do
    if v:IsA("ClickDetector") then
@@ -642,7 +206,7 @@ end
 end)
 
 tab1.newButton("Get weapons", "Gives weapons", function()
-last_pick_sin_mrazy = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
+last_pick_sin_mrazy = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame 
 
 game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-18, 6, -14)
 task.wait()
@@ -723,7 +287,7 @@ tab1.newToggle("Anti infected players", "Fling players", true, function(toggleSt
 				 end
 			 end
 		 end
-
+		 
 		 fling()
 	 end
     else
@@ -761,8 +325,8 @@ while hh do
 end)
 
 tab1.newInput("Grab player", "There may be disturbances", function(text)
-last_pick_sin_mrazy = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
-
+last_pick_sin_mrazy = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame 
+   
     PlayerName = text
 local function findPlayer(name)
     for _, player in ipairs(game.Players:GetPlayers()) do
@@ -817,7 +381,7 @@ local function PlayerAdded(Player)
        if (Character and Character:IsDescendantOf(workspace)) and (PrimaryPart and PrimaryPart:IsDescendantOf(Character)) then
            if PrimaryPart.AssemblyAngularVelocity.Magnitude > 0 or PrimaryPart.AssemblyLinearVelocity.Magnitude > 0 then
                if Detected == false then
-
+             
                end
                Detected = true
                for i,v in ipairs(Character:GetDescendants()) do
@@ -878,4 +442,96 @@ tab1.newLabel("Events")
 tab1.newButton("Fullbright", "You will see in the dark", function()
     pcall(function()
     local lighting = game:GetService("Lighting");
-    lighting.Ambient = Color3.fromRGB(255, 255, 25
+    lighting.Ambient = Color3.fromRGB(255, 255, 255);
+    lighting.Brightness = 1;
+    lighting.FogEnd = 1e10;
+    for i, v in pairs(lighting:GetDescendants()) do
+        if v:IsA("BloomEffect") or v:IsA("BlurEffect") or v:IsA("ColorCorrectionEffect") or v:IsA("SunRaysEffect") then
+            v.Enabled = false;
+        end;
+    end;
+    lighting.Changed:Connect(function()
+        lighting.Ambient = Color3.fromRGB(255, 255, 255);
+        lighting.Brightness = 1;
+        lighting.FogEnd = 1e10;
+    end);
+    spawn(function()
+        local character = game:GetService("Players").LocalPlayer.Character;
+        while wait() do
+            repeat wait() until character ~= nil;
+            if not character.HumanoidRootPart:FindFirstChildWhichIsA("PointLight") then
+                local headlight = Instance.new("PointLight", character.HumanoidRootPart);
+                headlight.Brightness = 1;
+                headlight.Range = 60;
+            end;
+        end;
+    end);
+end)
+end)
+
+tab1.newButton("No fog", "Helps against the rich", function()
+    game.Lighting.FogStart = math.huge
+game.Lighting.FogEnd = math.huge
+game.Lighting.FogColor = Color3.new(0,0,0)
+end)
+
+tab1.newButton("Check Seismic Activity", "Checks how much time is left before disaster", function()
+local player = game.Players.LocalPlayer
+local camera = workspace.CurrentCamera
+local targetPosition = CFrame.new(-22, 6, -10)
+
+local originalPosition = camera.CFrame
+camera.CameraType = Enum.CameraType.Scriptable
+camera.CFrame = targetPosition
+
+wait(4)
+camera.CameraType = Enum.CameraType.Custom
+camera.CFrame = originalPosition
+end)
+
+tab1.newButton("Anti black hole", "You don't get distracted by explosions", function()
+    local plr = game.Players.LocalPlayer
+local char = plr.Character
+  for _, child in pairs(char:GetChildren()) do
+    if child:IsA("BasePart") then
+      child.Massless = false
+      child.CustomPhysicalProperties = PhysicalProperties.new(math.huge, math.huge, math.huge) 
+    end
+  end
+end)
+
+tab1.newButton("Kill all NPCs", "Kills NPC entities (if you damage them, their HP will be restored)", function()
+sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", 112412400000)
+sethiddenproperty(game.Players.LocalPlayer, "MaxSimulationRadius", 112412400000)
+for i, d in pairs(game.Workspace:GetDescendants()) do
+    if d.ClassName == 'Humanoid' and not game.Players:FindFirstChild(d.Parent.Name) then
+        d.Health = 0
+    end
+end
+end)
+
+tab1.newLabel("GUIS")
+
+tab1.newButton("Smile Hax", "Tap here", function()
+    loadstring(game:HttpGet("https://pastebin.com/raw/WG1BMS72",true))()
+end)
+
+tab1.newButton("Multi hub", "Tap here", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/jj123llol/multi-hub/main/Multi",true))()
+end)
+
+tab1.newButton("ROChips", "Tap here", function()
+    loadstring(game:HttpGet(('https://pastebin.com/raw/5NvnvrrS'),true))()
+end)
+
+tab1.newButton("GUI", "Tap here", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/MariyaFurmanova/Library/main/InfectiousSmile", true))()
+end)
+
+tab1.newButton("GUI", "Tap here", function()
+    loadstring(game:HttpGet("https://pastebin.com/raw/X8hLEwcz"))()
+end)
+
+tab1.newButton("GUI", "Tap here", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Nicuse/RobloxScripts/main/InfectiousSmile.lua", true))()
+end)
